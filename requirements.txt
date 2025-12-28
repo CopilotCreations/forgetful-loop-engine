@@ -1,0 +1,9 @@
+# Lethe - Python Dependencies
+
+# No external dependencies required for core functionality
+# The system uses only Python standard library modules
+
+# Optional: If you want tracemalloc support for memory tracking
+# (already in standard library for Python 3.4+)
+
+# For development and testing, see requirements-dev.txt
