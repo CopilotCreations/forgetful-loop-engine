@@ -32,7 +32,23 @@ from src.capabilities import register_default_capabilities
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse command line arguments."""
+    """Parse command line arguments.
+
+    Parses and validates command line arguments for configuring the Lethe
+    system, including iteration count, decay parameters, timing intervals,
+    and logging options.
+
+    Returns:
+        argparse.Namespace: Parsed arguments containing:
+            - iterations: Number of iterations to run (None for infinite)
+            - decay_interval: Seconds between decay attempts
+            - decay_prob: Probability of decay per interval (0.0-1.0)
+            - loop_interval: Seconds between main loop iterations
+            - narrative_interval: Seconds between narrative outputs
+            - seed: Random seed for reproducibility
+            - verbose: Whether to enable DEBUG logging
+            - demo: Whether to run in demo mode
+    """
     parser = argparse.ArgumentParser(
         description="Lethe - A Self-Degrading Cognitive System",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -104,7 +120,11 @@ Examples:
 
 
 def print_banner() -> None:
-    """Print the Lethe startup banner."""
+    """Print the Lethe startup banner.
+
+    Displays an ASCII art banner with the Lethe logo and tagline
+    to the console when the application starts.
+    """
     banner = """
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                              ║
@@ -125,7 +145,16 @@ def print_banner() -> None:
 
 
 def run_demo() -> None:
-    """Run a quick demonstration of the Lethe system."""
+    """Run a quick demonstration of the Lethe system.
+
+    Executes 20 fast iterations with high decay probability to showcase
+    the system's self-degrading behavior. Uses fixed parameters optimized
+    for demonstration purposes including a seed of 42 for reproducibility.
+
+    The demo prints status information before and after execution,
+    including final health percentage, remaining capabilities, and
+    total decay events.
+    """
     print("\n" + "="*60)
     print("DEMO MODE: Running 20 fast iterations to demonstrate decay")
     print("="*60 + "\n")
@@ -161,7 +190,16 @@ def run_demo() -> None:
 
 
 def main() -> int:
-    """Main entry point."""
+    """Main entry point for the Lethe system.
+
+    Orchestrates the initialization and execution of the Lethe cognitive
+    decay simulation. Parses command line arguments, displays the startup
+    banner, creates and configures the Lethe instance, registers default
+    capabilities, and runs the main loop.
+
+    Returns:
+        int: Exit code (0 for success, 1 for error).
+    """
     args = parse_args()
     
     # Print banner

@@ -62,6 +62,7 @@ class CapabilityRegistry:
     """
     
     def __init__(self):
+        """Initializes a new CapabilityRegistry with empty registries."""
         self._capabilities: Dict[str, Callable] = {}
         self._metadata: Dict[str, CapabilityMetadata] = {}
         self._logger = logging.getLogger("lethe.registry")
@@ -151,13 +152,27 @@ class CapabilityRegistry:
         self._logger.debug(f"Registered capability: {name} (importance={importance.name})")
     
     def get(self, name: str) -> Optional[Callable]:
-        """Get a capability by name, or None if not found or deleted."""
+        """Gets a capability by name.
+
+        Args:
+            name: The unique identifier of the capability to retrieve.
+
+        Returns:
+            The capability function if found and not deleted, None otherwise.
+        """
         if name in self._deleted_capabilities:
             return None
         return self._capabilities.get(name)
     
     def get_metadata(self, name: str) -> Optional[CapabilityMetadata]:
-        """Get metadata for a capability by name."""
+        """Gets metadata for a capability by name.
+
+        Args:
+            name: The unique identifier of the capability.
+
+        Returns:
+            The CapabilityMetadata if found, None otherwise.
+        """
         return self._metadata.get(name)
     
     def execute(self, name: str, *args, **kwargs) -> Any:
@@ -185,21 +200,39 @@ class CapabilityRegistry:
         return self._capabilities[name](*args, **kwargs)
     
     def list_capabilities(self) -> List[str]:
-        """Get list of all registered capability names (including degraded but not deleted)."""
+        """Gets list of all registered capability names.
+
+        Includes degraded capabilities but excludes deleted ones.
+
+        Returns:
+            List of capability name strings.
+        """
         return [name for name in self._capabilities.keys() 
                 if name not in self._deleted_capabilities]
     
     def list_active_capabilities(self) -> List[str]:
-        """Get list of capabilities that haven't been degraded."""
+        """Gets list of capabilities that haven't been degraded.
+
+        Returns:
+            List of capability name strings that are still fully functional.
+        """
         return [name for name, meta in self._metadata.items()
                 if not meta.is_degraded and name not in self._deleted_capabilities]
     
     def list_degraded_capabilities(self) -> List[str]:
-        """Get list of capabilities that have been degraded."""
+        """Gets list of capabilities that have been degraded.
+
+        Returns:
+            List of capability name strings that have been degraded.
+        """
         return self._degraded_capabilities.copy()
     
     def list_deleted_capabilities(self) -> List[str]:
-        """Get list of capabilities that have been completely deleted."""
+        """Gets list of capabilities that have been completely deleted.
+
+        Returns:
+            List of capability name strings that have been deleted.
+        """
         return self._deleted_capabilities.copy()
     
     def mark_degraded(self, name: str, level: int = 1) -> None:
@@ -217,7 +250,11 @@ class CapabilityRegistry:
                 self._degraded_capabilities.append(name)
     
     def mark_deleted(self, name: str) -> None:
-        """Mark a capability as completely deleted."""
+        """Marks a capability as completely deleted.
+
+        Args:
+            name: The capability name to mark as deleted.
+        """
         if name not in self._deleted_capabilities:
             self._deleted_capabilities.append(name)
         self.mark_degraded(name, level=3)
@@ -235,15 +272,14 @@ class CapabilityRegistry:
             self._logger.debug(f"Replaced capability implementation: {name}")
     
     def get_degradation_candidates(self) -> List[str]:
-        """
-        Get list of capabilities sorted by degradation priority.
-        
-        Returns capabilities sorted by:
-        1. Lower importance first
-        2. Lower degradation resistance first
-        3. Not already degraded
-        
-        Essential capabilities are never returned.
+        """Gets list of capabilities sorted by degradation priority.
+
+        Returns capabilities sorted by importance (ascending), then by
+        degradation resistance (ascending). Essential capabilities and
+        already deleted capabilities are excluded.
+
+        Returns:
+            List of capability names ordered by degradation priority.
         """
         candidates = []
         for name, meta in self._metadata.items():
@@ -257,23 +293,46 @@ class CapabilityRegistry:
         return [name for name, _ in candidates]
     
     def capability_count(self) -> int:
-        """Get the total number of registered capabilities."""
+        """Gets the total number of registered capabilities.
+
+        Returns:
+            The count of all registered capabilities.
+        """
         return len(self._capabilities)
     
     def active_count(self) -> int:
-        """Get the number of non-degraded capabilities."""
+        """Gets the number of non-degraded capabilities.
+
+        Returns:
+            The count of capabilities that are still fully functional.
+        """
         return len(self.list_active_capabilities())
     
     def degraded_count(self) -> int:
-        """Get the number of degraded capabilities."""
+        """Gets the number of degraded capabilities.
+
+        Returns:
+            The count of capabilities that have been degraded.
+        """
         return len(self._degraded_capabilities)
     
     def get_dependency_graph(self) -> Dict[str, List[str]]:
-        """Get the dependency graph for all capabilities."""
+        """Gets the dependency graph for all capabilities.
+
+        Returns:
+            Dict mapping capability names to lists of their dependencies.
+        """
         return {name: meta.dependencies for name, meta in self._metadata.items()}
     
     def get_dependents(self, name: str) -> List[str]:
-        """Get list of capabilities that depend on the given capability."""
+        """Gets list of capabilities that depend on the given capability.
+
+        Args:
+            name: The capability name to find dependents for.
+
+        Returns:
+            List of capability names that depend on the given capability.
+        """
         dependents = []
         for cap_name, meta in self._metadata.items():
             if name in meta.dependencies:

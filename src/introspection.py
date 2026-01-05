@@ -174,15 +174,30 @@ class Introspector:
         return (current_weight / total_weight) * 100.0
     
     def get_current_state(self) -> SystemState:
-        """Get the current system state."""
+        """Get the current system state.
+
+        Returns:
+            SystemState: A snapshot of the current system state.
+        """
         return self._capture_state()
     
     def get_state_history(self) -> List[SystemState]:
-        """Get the complete state history."""
+        """Get the complete state history.
+
+        Returns:
+            List[SystemState]: A copy of all recorded state snapshots.
+        """
         return self._state_history.copy()
     
     def get_recent_states(self, count: int = 10) -> List[SystemState]:
-        """Get the most recent state snapshots."""
+        """Get the most recent state snapshots.
+
+        Args:
+            count: Maximum number of recent states to return. Defaults to 10.
+
+        Returns:
+            List[SystemState]: The most recent state snapshots, up to count.
+        """
         return self._state_history[-count:]
     
     def update_lost_capabilities(self) -> List[CapabilityLoss]:
@@ -215,11 +230,19 @@ class Introspector:
         return new_losses
     
     def get_lost_capabilities(self) -> List[CapabilityLoss]:
-        """Get all recorded capability losses."""
+        """Get all recorded capability losses.
+
+        Returns:
+            List[CapabilityLoss]: A copy of all recorded capability losses.
+        """
         return self._lost_capabilities.copy()
     
     def get_lost_count(self) -> int:
-        """Get the count of lost capabilities."""
+        """Get the count of lost capabilities.
+
+        Returns:
+            int: The number of capabilities that have been lost.
+        """
         return len(self._lost_capabilities)
     
     def get_capability_info(self, name: str) -> Optional[Dict[str, Any]]:
@@ -301,7 +324,11 @@ class Introspector:
             return None
     
     def get_uptime(self) -> float:
-        """Get the system uptime in seconds."""
+        """Get the system uptime in seconds.
+
+        Returns:
+            float: The number of seconds since the system started.
+        """
         return time.time() - self._startup_time
     
     def get_health_trend(self) -> str:
@@ -375,11 +402,19 @@ class Introspector:
         return meta.degradation_level < 3
     
     def get_forgotten_names(self) -> List[str]:
-        """Get list of capability names that have been forgotten (deleted)."""
+        """Get list of capability names that have been forgotten (deleted).
+
+        Returns:
+            List[str]: Names of capabilities that have been deleted.
+        """
         return self._registry.list_deleted_capabilities()
     
     def get_fading_memories(self) -> List[str]:
-        """Get list of capabilities that are degraded but not yet deleted."""
+        """Get list of capabilities that are degraded but not yet deleted.
+
+        Returns:
+            List[str]: Names of capabilities that are degrading but still exist.
+        """
         degraded = self._registry.list_degraded_capabilities()
         deleted = set(self._registry.list_deleted_capabilities())
         return [name for name in degraded if name not in deleted]

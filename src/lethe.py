@@ -113,7 +113,11 @@ class Lethe:
         self._logger.info("Lethe system initialized")
     
     def _setup_logging(self, level: int) -> None:
-        """Configure logging for the Lethe system."""
+        """Configure logging for the Lethe system.
+
+        Args:
+            level: The logging level to use (e.g., logging.INFO, logging.DEBUG).
+        """
         logging.basicConfig(
             level=level,
             format='%(asctime)s | %(name)s | %(levelname)s | %(message)s',
@@ -121,7 +125,12 @@ class Lethe:
         )
     
     def _setup_signals(self) -> None:
-        """Set up signal handlers for graceful shutdown."""
+        """Set up signal handlers for graceful shutdown.
+
+        Registers handlers for SIGINT and SIGTERM to allow graceful
+        termination of the main loop. Silently continues if signal
+        handling is not supported in the current context.
+        """
         def signal_handler(signum, frame):
             self._logger.info(f"Received signal {signum}, initiating graceful shutdown...")
             self._running = False
@@ -135,37 +144,65 @@ class Lethe:
     
     @property
     def registry(self) -> CapabilityRegistry:
-        """Get the capability registry."""
+        """Get the capability registry.
+
+        Returns:
+            The CapabilityRegistry instance managing all registered capabilities.
+        """
         return self._registry
     
     @property
     def decay_engine(self) -> DecayEngine:
-        """Get the decay engine."""
+        """Get the decay engine.
+
+        Returns:
+            The DecayEngine instance responsible for capability degradation.
+        """
         return self._decay_engine
     
     @property
     def introspector(self) -> Introspector:
-        """Get the introspector."""
+        """Get the introspector.
+
+        Returns:
+            The Introspector instance for system self-reflection.
+        """
         return self._introspector
     
     @property
     def narrative(self) -> NarrativeLogger:
-        """Get the narrative logger."""
+        """Get the narrative logger.
+
+        Returns:
+            The NarrativeLogger instance for generating system narratives.
+        """
         return self._narrative
     
     @property
     def safety(self) -> SafetyLayer:
-        """Get the safety layer."""
+        """Get the safety layer.
+
+        Returns:
+            The SafetyLayer instance ensuring minimum system viability.
+        """
         return self._safety
     
     @property
     def state(self) -> LetheState:
-        """Get the current system state."""
+        """Get the current system state.
+
+        Returns:
+            The current LetheState enum value indicating system status.
+        """
         return self._state
     
     @property
     def is_running(self) -> bool:
-        """Check if the system is running."""
+        """Check if the system is running.
+
+        Returns:
+            True if the main loop is currently running, False otherwise.
+        """
         return self._running
     
     def register(
@@ -248,7 +285,11 @@ class Lethe:
         )
     
     def _should_narrate(self) -> bool:
-        """Check if it's time for a narrative output."""
+        """Check if it's time for a narrative output.
+
+        Returns:
+            True if enough time has passed since the last narrative output.
+        """
         return time.time() - self._last_narrative_time >= self._narrative_interval
     
     def _execute_capabilities(self) -> int:
@@ -299,7 +340,12 @@ class Lethe:
         return event
     
     def _check_safety(self) -> None:
-        """Perform safety checks and interventions if needed."""
+        """Perform safety checks and interventions if needed.
+
+        Checks system health and triggers safety interventions if the
+        system has degraded to a critical state. Updates system state
+        to CRITICAL when intervention is required.
+        """
         check = self._safety.check()
         
         if check.intervention_needed:
@@ -388,7 +434,11 @@ class Lethe:
             self._shutdown()
     
     def _shutdown(self) -> None:
-        """Perform graceful shutdown."""
+        """Perform graceful shutdown.
+
+        Generates a final narrative, logs comprehensive shutdown statistics
+        including uptime, iteration count, final health, and decay events.
+        """
         self._logger.info("Shutting down Lethe system...")
         
         # Final narrative
@@ -431,19 +481,31 @@ class Lethe:
         }
     
     def pause(self) -> None:
-        """Pause the decay engine."""
+        """Pause the decay engine.
+
+        Disables decay operations while keeping the system running.
+        The system state changes to PAUSED.
+        """
         self._decay_engine.disable()
         self._state = LetheState.PAUSED
         self._logger.info("System paused")
     
     def resume(self) -> None:
-        """Resume the decay engine."""
+        """Resume the decay engine.
+
+        Re-enables decay operations after a pause.
+        The system state changes to RUNNING.
+        """
         self._decay_engine.enable()
         self._state = LetheState.RUNNING
         self._logger.info("System resumed")
     
     def stop(self) -> None:
-        """Stop the system."""
+        """Stop the system.
+
+        Sets the running flag to False, causing the main loop to exit
+        gracefully after the current iteration completes.
+        """
         self._running = False
     
     def force_decay(self, name: Optional[str] = None) -> Optional[DecayEvent]:

@@ -12,7 +12,11 @@ class TestDecayEvent:
     """Tests for the DecayEvent dataclass."""
     
     def test_decay_event_creation(self):
-        """Test creating a decay event."""
+        """Test creating a decay event.
+
+        Verifies that a DecayEvent can be instantiated with all required
+        fields and that the values are correctly stored.
+        """
         event = DecayEvent(
             timestamp=time.time(),
             capability_name="test",
@@ -30,7 +34,12 @@ class TestDecayEngine:
     
     @pytest.fixture
     def registry(self):
-        """Create a registry with test capabilities."""
+        """Create a registry with test capabilities.
+
+        Returns:
+            CapabilityRegistry: A registry populated with trivial, medium,
+                and essential test capabilities.
+        """
         reg = CapabilityRegistry()
         
         @reg.register(name="trivial1", importance=Importance.TRIVIAL, degradation_resistance=0.1)
@@ -49,17 +58,33 @@ class TestDecayEngine:
     
     @pytest.fixture
     def engine(self, registry):
-        """Create a decay engine with the test registry."""
+        """Create a decay engine with the test registry.
+
+        Args:
+            registry: The test capability registry fixture.
+
+        Returns:
+            DecayEngine: A configured decay engine with short intervals
+                for testing purposes.
+        """
         return DecayEngine(registry, decay_interval=0.1, decay_probability=0.5, seed=42)
     
     def test_engine_initialization(self, engine):
-        """Test engine initializes correctly."""
+        """Test engine initializes correctly.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         assert engine.decay_interval == 0.1
         assert engine.decay_probability == 0.5
         assert engine.is_enabled is True
     
     def test_enable_disable(self, engine):
-        """Test enabling and disabling the engine."""
+        """Test enabling and disabling the engine.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         engine.disable()
         assert engine.is_enabled is False
         
@@ -67,14 +92,25 @@ class TestDecayEngine:
         assert engine.is_enabled is True
     
     def test_should_decay_when_disabled(self, engine):
-        """Test that decay doesn't occur when disabled."""
+        """Test that decay doesn't occur when disabled.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         engine.disable()
         # Wait past the interval
         time.sleep(0.15)
         assert engine.should_decay() is False
     
     def test_select_target_prefers_trivial(self, engine):
-        """Test that target selection prefers lower importance."""
+        """Test that target selection prefers lower importance.
+
+        Runs multiple selections and verifies that trivial capabilities
+        are selected more frequently than higher importance ones.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         # Run multiple selections and count
         trivial_count = 0
         total = 100
@@ -88,13 +124,25 @@ class TestDecayEngine:
         assert trivial_count > total * 0.4
     
     def test_select_target_excludes_essential(self, engine):
-        """Test that essential capabilities are never selected."""
+        """Test that essential capabilities are never selected.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         for _ in range(100):
             target = engine.select_target()
             assert target != "essential1"
     
     def test_create_approximation(self, engine, registry):
-        """Test creating an approximated function."""
+        """Test creating an approximated function.
+
+        Verifies that an approximated function produces varied results
+        when configured with a 100% error rate.
+
+        Args:
+            engine: The decay engine fixture.
+            registry: The capability registry fixture.
+        """
         original = lambda: 100
         approx = engine.create_approximation(original, error_rate=1.0)  # Always error
         
@@ -107,7 +155,14 @@ class TestDecayEngine:
         assert len(results) > 1 or 100 not in results
     
     def test_create_stub(self, engine):
-        """Test creating stub functions."""
+        """Test creating stub functions.
+
+        Verifies that stubs return appropriate default values for
+        different return types (int, str, list, None).
+
+        Args:
+            engine: The decay engine fixture.
+        """
         stub_int = engine.create_stub("test", int)
         stub_str = engine.create_stub("test", str)
         stub_list = engine.create_stub("test", list)
@@ -119,7 +174,14 @@ class TestDecayEngine:
         assert stub_none() is None
     
     def test_apply_decay_progression(self, engine, registry):
-        """Test decay progression through levels."""
+        """Test decay progression through levels.
+
+        Verifies the decay sequence: approximate -> stub -> delete -> None.
+
+        Args:
+            engine: The decay engine fixture.
+            registry: The capability registry fixture.
+        """
         # First decay - should approximate
         event1 = engine.apply_decay("trivial1")
         assert event1.decay_type == "approximate"
@@ -140,12 +202,20 @@ class TestDecayEngine:
         assert event4 is None
     
     def test_apply_decay_blocks_essential(self, engine):
-        """Test that essential capabilities cannot be decayed."""
+        """Test that essential capabilities cannot be decayed.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         event = engine.apply_decay("essential1")
         assert event is None
     
     def test_get_history(self, engine):
-        """Test getting decay history."""
+        """Test getting decay history.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         engine.apply_decay("trivial1")
         engine.apply_decay("medium1")
         
@@ -153,7 +223,11 @@ class TestDecayEngine:
         assert len(history) == 2
     
     def test_get_recent_history(self, engine):
-        """Test getting recent decay history."""
+        """Test getting recent decay history.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         engine.apply_decay("trivial1")
         engine.apply_decay("trivial1")
         engine.apply_decay("medium1")
@@ -162,7 +236,11 @@ class TestDecayEngine:
         assert len(recent) == 2
     
     def test_get_statistics(self, engine):
-        """Test getting decay statistics."""
+        """Test getting decay statistics.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         engine.apply_decay("trivial1")  # approximate
         engine.apply_decay("trivial1")  # stub
         
@@ -172,19 +250,36 @@ class TestDecayEngine:
         assert stats["stubs"] == 1
     
     def test_force_decay(self, engine):
-        """Test forcing an immediate decay."""
+        """Test forcing an immediate decay.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         event = engine.force_decay("medium1")
         assert event is not None
         assert event.capability_name == "medium1"
     
     def test_force_decay_random(self, engine):
-        """Test forcing decay on random target."""
+        """Test forcing decay on random target.
+
+        Verifies that when no target is specified, a random non-essential
+        capability is selected for decay.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         event = engine.force_decay()
         assert event is not None
         assert event.capability_name != "essential1"
     
     def test_reset(self, engine):
-        """Test resetting the engine."""
+        """Test resetting the engine.
+
+        Verifies that reset clears all decay history and statistics.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         engine.apply_decay("trivial1")
         engine.apply_decay("medium1")
         
@@ -195,7 +290,13 @@ class TestDecayEngine:
         assert stats["history_length"] == 0
     
     def test_decay_interval_setter(self, engine):
-        """Test setting decay interval with minimum."""
+        """Test setting decay interval with minimum.
+
+        Verifies that the interval cannot be set below the minimum value.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         engine.decay_interval = 5.0
         assert engine.decay_interval == 5.0
         
@@ -203,7 +304,13 @@ class TestDecayEngine:
         assert engine.decay_interval == 1.0
     
     def test_decay_probability_setter(self, engine):
-        """Test setting decay probability with clamping."""
+        """Test setting decay probability with clamping.
+
+        Verifies that probability values are clamped to the range [0.0, 1.0].
+
+        Args:
+            engine: The decay engine fixture.
+        """
         engine.decay_probability = 0.75
         assert engine.decay_probability == 0.75
         
@@ -214,7 +321,13 @@ class TestDecayEngine:
         assert engine.decay_probability == 0.0
     
     def test_tick_with_decay(self, registry):
-        """Test tick method triggering decay."""
+        """Test tick method triggering decay.
+
+        Uses a high probability engine to verify tick can trigger decay.
+
+        Args:
+            registry: The capability registry fixture.
+        """
         engine = DecayEngine(registry, decay_interval=0.01, decay_probability=1.0, seed=42)
         time.sleep(0.02)
         
@@ -223,7 +336,11 @@ class TestDecayEngine:
         assert event is not None or engine.select_target() is None
     
     def test_tick_no_decay_when_disabled(self, engine):
-        """Test tick doesn't decay when engine disabled."""
+        """Test tick doesn't decay when engine disabled.
+
+        Args:
+            engine: The decay engine fixture.
+        """
         engine.disable()
         time.sleep(0.15)
         

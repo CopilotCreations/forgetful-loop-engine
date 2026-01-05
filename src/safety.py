@@ -86,21 +86,37 @@ class SafetyLayer:
     
     @property
     def is_active(self) -> bool:
-        """Check if the safety layer is active."""
+        """Check if the safety layer is active.
+
+        Returns:
+            bool: True if the safety layer is currently active.
+        """
         return self._is_active
     
     @property
     def is_emergency(self) -> bool:
-        """Check if the system is in emergency mode."""
+        """Check if the system is in emergency mode.
+
+        Returns:
+            bool: True if the system is currently in emergency mode.
+        """
         return self._emergency_mode
     
     def activate(self) -> None:
-        """Activate the safety layer."""
+        """Activate the safety layer.
+
+        Enables safety monitoring and protection mechanisms for the system.
+        """
         self._is_active = True
         self._logger.info("Safety layer activated")
     
     def deactivate(self) -> None:
-        """Deactivate the safety layer (use with caution)."""
+        """Deactivate the safety layer (use with caution).
+
+        Warning:
+            Disabling the safety layer puts the system at risk of total collapse.
+            Use only for testing or when manually managing system stability.
+        """
         self._is_active = False
         self._logger.warning("Safety layer deactivated - system at risk!")
     
@@ -265,16 +281,33 @@ class SafetyLayer:
         return True
     
     def get_status(self) -> SafetyStatus:
-        """Get the current safety status."""
+        """Get the current safety status.
+
+        Performs a safety check and returns the resulting status.
+
+        Returns:
+            SafetyStatus: The current safety status of the system.
+        """
         check = self.check()
         return check.status
     
     def get_check_history(self) -> List[SafetyCheck]:
-        """Get the complete safety check history."""
+        """Get the complete safety check history.
+
+        Returns:
+            List[SafetyCheck]: A copy of all safety checks performed.
+        """
         return self._check_history.copy()
     
     def get_recent_checks(self, count: int = 10) -> List[SafetyCheck]:
-        """Get the most recent safety checks."""
+        """Get the most recent safety checks.
+
+        Args:
+            count: Maximum number of recent checks to return. Defaults to 10.
+
+        Returns:
+            List[SafetyCheck]: The most recent safety checks, up to count.
+        """
         return self._check_history[-count:]
     
     def get_statistics(self) -> Dict[str, Any]:

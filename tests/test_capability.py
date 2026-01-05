@@ -14,7 +14,11 @@ class TestImportance:
     """Tests for the Importance enum."""
     
     def test_importance_ordering(self):
-        """Test that importance levels are ordered correctly."""
+        """Test that importance levels are ordered correctly.
+
+        Verifies that the Importance enum values maintain proper
+        ordering from TRIVIAL to ESSENTIAL.
+        """
         assert Importance.TRIVIAL < Importance.LOW
         assert Importance.LOW < Importance.MEDIUM
         assert Importance.MEDIUM < Importance.HIGH
@@ -22,7 +26,10 @@ class TestImportance:
         assert Importance.CRITICAL < Importance.ESSENTIAL
     
     def test_importance_values(self):
-        """Test importance enum values."""
+        """Test importance enum values.
+
+        Verifies that TRIVIAL has value 1 and ESSENTIAL has value 6.
+        """
         assert Importance.TRIVIAL.value == 1
         assert Importance.ESSENTIAL.value == 6
 
@@ -31,7 +38,11 @@ class TestCapabilityMetadata:
     """Tests for the CapabilityMetadata dataclass."""
     
     def test_default_values(self):
-        """Test default values for metadata."""
+        """Test default values for metadata.
+
+        Verifies that CapabilityMetadata initializes with correct defaults
+        when only the name is provided.
+        """
         meta = CapabilityMetadata(name="test")
         assert meta.name == "test"
         assert meta.importance == Importance.MEDIUM
@@ -42,7 +53,11 @@ class TestCapabilityMetadata:
         assert meta.execution_count == 0
     
     def test_custom_values(self):
-        """Test custom values for metadata."""
+        """Test custom values for metadata.
+
+        Verifies that CapabilityMetadata correctly stores custom values
+        for importance, dependencies, and degradation_resistance.
+        """
         meta = CapabilityMetadata(
             name="custom",
             importance=Importance.HIGH,
@@ -60,11 +75,19 @@ class TestCapabilityRegistry:
     
     @pytest.fixture
     def registry(self):
-        """Create a fresh registry for each test."""
+        """Create a fresh registry for each test.
+
+        Returns:
+            CapabilityRegistry: A new empty registry instance.
+        """
         return CapabilityRegistry()
     
     def test_register_decorator(self, registry):
-        """Test registering a capability using decorator."""
+        """Test registering a capability using decorator.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         @registry.register(
             name="test_func",
             importance=Importance.HIGH,
@@ -77,7 +100,11 @@ class TestCapabilityRegistry:
         assert registry.get("test_func") is not None
     
     def test_register_function(self, registry):
-        """Test registering a function directly."""
+        """Test registering a function directly.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         def my_func():
             return 42
         
@@ -90,11 +117,19 @@ class TestCapabilityRegistry:
         assert "my_func" in registry.list_capabilities()
     
     def test_get_nonexistent(self, registry):
-        """Test getting a non-existent capability."""
+        """Test getting a non-existent capability.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         assert registry.get("nonexistent") is None
     
     def test_execute_capability(self, registry):
-        """Test executing a registered capability."""
+        """Test executing a registered capability.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         @registry.register(name="add_one")
         def add_one(x):
             return x + 1
@@ -103,12 +138,23 @@ class TestCapabilityRegistry:
         assert result == 6
     
     def test_execute_nonexistent_raises(self, registry):
-        """Test that executing non-existent capability raises KeyError."""
+        """Test that executing non-existent capability raises KeyError.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+
+        Raises:
+            KeyError: When attempting to execute a non-existent capability.
+        """
         with pytest.raises(KeyError):
             registry.execute("nonexistent")
     
     def test_execution_count_increments(self, registry):
-        """Test that execution count increments on each call."""
+        """Test that execution count increments on each call.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         @registry.register(name="counter")
         def counter():
             return 1
@@ -121,7 +167,11 @@ class TestCapabilityRegistry:
         assert meta.execution_count == 3
     
     def test_list_active_capabilities(self, registry):
-        """Test listing active (non-degraded) capabilities."""
+        """Test listing active (non-degraded) capabilities.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         @registry.register(name="active1")
         def active1():
             pass
@@ -137,7 +187,11 @@ class TestCapabilityRegistry:
         assert "active1" not in active
     
     def test_mark_degraded(self, registry):
-        """Test marking a capability as degraded."""
+        """Test marking a capability as degraded.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         @registry.register(name="to_degrade")
         def to_degrade():
             pass
@@ -150,7 +204,11 @@ class TestCapabilityRegistry:
         assert "to_degrade" in registry.list_degraded_capabilities()
     
     def test_mark_deleted(self, registry):
-        """Test marking a capability as deleted."""
+        """Test marking a capability as deleted.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         @registry.register(name="to_delete")
         def to_delete():
             pass
@@ -161,7 +219,11 @@ class TestCapabilityRegistry:
         assert registry.get("to_delete") is None
     
     def test_replace_capability(self, registry):
-        """Test replacing a capability's implementation."""
+        """Test replacing a capability's implementation.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         @registry.register(name="replaceable")
         def replaceable():
             return "original"
@@ -174,7 +236,14 @@ class TestCapabilityRegistry:
         assert result == "replaced"
     
     def test_degradation_candidates(self, registry):
-        """Test getting degradation candidates."""
+        """Test getting degradation candidates.
+
+        Verifies that ESSENTIAL capabilities are never candidates and
+        lower importance capabilities are prioritized.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         @registry.register(name="essential", importance=Importance.ESSENTIAL)
         def essential():
             pass
@@ -195,7 +264,11 @@ class TestCapabilityRegistry:
         assert candidates[0] == "trivial"
     
     def test_capability_count(self, registry):
-        """Test capability counting."""
+        """Test capability counting.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         @registry.register(name="cap1")
         def cap1():
             pass
@@ -207,7 +280,11 @@ class TestCapabilityRegistry:
         assert registry.capability_count() == 2
     
     def test_degradation_resistance_clamping(self, registry):
-        """Test that degradation resistance is clamped to 0.0-1.0."""
+        """Test that degradation resistance is clamped to 0.0-1.0.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         @registry.register(name="high_resist", degradation_resistance=1.5)
         def high_resist():
             pass
@@ -220,7 +297,11 @@ class TestCapabilityRegistry:
         assert registry.get_metadata("low_resist").degradation_resistance == 0.0
     
     def test_dependency_graph(self, registry):
-        """Test getting the dependency graph."""
+        """Test getting the dependency graph.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         @registry.register(name="base")
         def base():
             pass
@@ -233,7 +314,11 @@ class TestCapabilityRegistry:
         assert "base" in graph["dependent"]
     
     def test_get_dependents(self, registry):
-        """Test getting capabilities that depend on another."""
+        """Test getting capabilities that depend on another.
+
+        Args:
+            registry: Pytest fixture providing a CapabilityRegistry instance.
+        """
         @registry.register(name="base")
         def base():
             pass

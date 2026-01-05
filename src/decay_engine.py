@@ -84,36 +84,62 @@ class DecayEngine:
     
     @property
     def decay_interval(self) -> float:
-        """Get the current decay interval."""
+        """Get the current decay interval.
+
+        Returns:
+            float: Seconds between decay attempts.
+        """
         return self._decay_interval
     
     @decay_interval.setter
     def decay_interval(self, value: float) -> None:
-        """Set the decay interval (minimum 1.0 second)."""
+        """Set the decay interval (minimum 1.0 second).
+
+        Args:
+            value: New decay interval in seconds. Values below 1.0 are clamped to 1.0.
+        """
         self._decay_interval = max(1.0, value)
     
     @property
     def decay_probability(self) -> float:
-        """Get the current decay probability."""
+        """Get the current decay probability.
+
+        Returns:
+            float: Probability of decay per interval (0.0-1.0).
+        """
         return self._decay_probability
     
     @decay_probability.setter
     def decay_probability(self, value: float) -> None:
-        """Set the decay probability (0.0-1.0)."""
+        """Set the decay probability (0.0-1.0).
+
+        Args:
+            value: New decay probability. Values are clamped to the range 0.0-1.0.
+        """
         self._decay_probability = max(0.0, min(1.0, value))
     
     @property
     def is_enabled(self) -> bool:
-        """Check if the decay engine is enabled."""
+        """Check if the decay engine is enabled.
+
+        Returns:
+            bool: True if the decay engine is currently enabled.
+        """
         return self._is_enabled
     
     def enable(self) -> None:
-        """Enable the decay engine."""
+        """Enable the decay engine.
+
+        Allows decay ticks to proceed and apply degradation to capabilities.
+        """
         self._is_enabled = True
         self._logger.info("Decay engine enabled")
     
     def disable(self) -> None:
-        """Disable the decay engine."""
+        """Disable the decay engine.
+
+        Prevents decay ticks from applying any degradation to capabilities.
+        """
         self._is_enabled = False
         self._logger.info("Decay engine disabled")
     
@@ -352,11 +378,22 @@ class DecayEngine:
         return self.apply_decay(name)
     
     def get_history(self) -> List[DecayEvent]:
-        """Get the complete decay history."""
+        """Get the complete decay history.
+
+        Returns:
+            List[DecayEvent]: A copy of all decay events that have occurred.
+        """
         return self._decay_history.copy()
     
     def get_recent_history(self, count: int = 10) -> List[DecayEvent]:
-        """Get the most recent decay events."""
+        """Get the most recent decay events.
+
+        Args:
+            count: Maximum number of recent events to return.
+
+        Returns:
+            List[DecayEvent]: The most recent decay events, up to count.
+        """
         return self._decay_history[-count:]
     
     def get_statistics(self) -> Dict[str, Any]:
@@ -388,7 +425,11 @@ class DecayEngine:
         }
     
     def reset(self) -> None:
-        """Reset the decay engine state (does not restore capabilities)."""
+        """Reset the decay engine state.
+
+        Clears the decay history and resets counters. Note that this does not
+        restore capabilities that have already been degraded.
+        """
         self._decay_history.clear()
         self._total_decays = 0
         self._last_decay_time = time.time()

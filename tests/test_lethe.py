@@ -12,7 +12,11 @@ class TestLetheState:
     """Tests for the LetheState enum."""
     
     def test_lethe_state_values(self):
-        """Test lethe state enum values."""
+        """Test lethe state enum values.
+
+        Verifies that each LetheState enum member has the expected
+        string value.
+        """
         assert LetheState.INITIALIZING.value == "initializing"
         assert LetheState.RUNNING.value == "running"
         assert LetheState.STOPPED.value == "stopped"
@@ -22,7 +26,11 @@ class TestLoopIteration:
     """Tests for the LoopIteration dataclass."""
     
     def test_loop_iteration_creation(self):
-        """Test creating a loop iteration record."""
+        """Test creating a loop iteration record.
+
+        Verifies that a LoopIteration dataclass can be instantiated
+        with all required fields and that the values are correctly stored.
+        """
         iteration = LoopIteration(
             iteration=1,
             timestamp=time.time(),
@@ -39,7 +47,12 @@ class TestLethe:
     
     @pytest.fixture
     def lethe(self):
-        """Create a Lethe instance for testing."""
+        """Create a Lethe instance for testing.
+
+        Returns:
+            Lethe: A configured Lethe instance with short intervals
+                and fixed seed for deterministic testing.
+        """
         return Lethe(
             decay_interval=0.1,
             decay_probability=0.5,
@@ -50,12 +63,26 @@ class TestLethe:
         )
     
     def test_initialization(self, lethe):
-        """Test Lethe initialization."""
+        """Test Lethe initialization.
+
+        Args:
+            lethe: The Lethe fixture instance.
+
+        Verifies that a newly created Lethe instance starts in the
+        INITIALIZING state and is not running.
+        """
         assert lethe.state == LetheState.INITIALIZING
         assert lethe.is_running is False
     
     def test_register_decorator(self, lethe):
-        """Test registering capabilities with decorator."""
+        """Test registering capabilities with decorator.
+
+        Args:
+            lethe: The Lethe fixture instance.
+
+        Verifies that the @lethe.register decorator correctly adds
+        a capability to the registry.
+        """
         @lethe.register(name="test_cap", importance=Importance.HIGH)
         def test_cap():
             return "test"
@@ -63,7 +90,14 @@ class TestLethe:
         assert "test_cap" in lethe.registry.list_capabilities()
     
     def test_register_function(self, lethe):
-        """Test registering functions directly."""
+        """Test registering functions directly.
+
+        Args:
+            lethe: The Lethe fixture instance.
+
+        Verifies that register_function() correctly adds a capability
+        to the registry without using the decorator syntax.
+        """
         def my_func():
             return 42
         
@@ -76,7 +110,14 @@ class TestLethe:
         assert "my_func" in lethe.registry.list_capabilities()
     
     def test_initialize(self, lethe):
-        """Test system initialization."""
+        """Test system initialization.
+
+        Args:
+            lethe: The Lethe fixture instance.
+
+        Verifies that calling initialize() transitions the system
+        from INITIALIZING to RUNNING state.
+        """
         @lethe.register(name="cap1", importance=Importance.ESSENTIAL)
         def cap1():
             pass
@@ -86,7 +127,14 @@ class TestLethe:
         assert lethe.state == LetheState.RUNNING
     
     def test_component_access(self, lethe):
-        """Test accessing system components."""
+        """Test accessing system components.
+
+        Args:
+            lethe: The Lethe fixture instance.
+
+        Verifies that all core components (registry, decay_engine,
+        introspector, narrative, safety) are accessible and initialized.
+        """
         assert lethe.registry is not None
         assert lethe.decay_engine is not None
         assert lethe.introspector is not None
@@ -94,7 +142,14 @@ class TestLethe:
         assert lethe.safety is not None
     
     def test_tick(self, lethe):
-        """Test a single tick of the main loop."""
+        """Test a single tick of the main loop.
+
+        Args:
+            lethe: The Lethe fixture instance.
+
+        Verifies that a single tick() call increments the iteration
+        counter and returns a valid LoopIteration with positive health.
+        """
         @lethe.register(name="tick_test", importance=Importance.ESSENTIAL)
         def tick_test():
             pass
@@ -106,7 +161,14 @@ class TestLethe:
         assert iteration.health > 0
     
     def test_multiple_ticks(self, lethe):
-        """Test multiple ticks."""
+        """Test multiple ticks.
+
+        Args:
+            lethe: The Lethe fixture instance.
+
+        Verifies that calling tick() multiple times correctly
+        increments the iteration counter.
+        """
         @lethe.register(name="multi_test", importance=Importance.ESSENTIAL)
         def multi_test():
             pass
@@ -119,7 +181,14 @@ class TestLethe:
         assert iteration.iteration == 5
     
     def test_pause_resume(self, lethe):
-        """Test pausing and resuming the system."""
+        """Test pausing and resuming the system.
+
+        Args:
+            lethe: The Lethe fixture instance.
+
+        Verifies that pause() transitions to PAUSED state and disables
+        decay, while resume() returns to RUNNING state and re-enables decay.
+        """
         lethe.initialize()
         
         lethe.pause()
@@ -131,14 +200,28 @@ class TestLethe:
         assert lethe.decay_engine.is_enabled is True
     
     def test_stop(self, lethe):
-        """Test stopping the system."""
+        """Test stopping the system.
+
+        Args:
+            lethe: The Lethe fixture instance.
+
+        Verifies that stop() sets is_running to False.
+        """
         lethe.initialize()
         lethe.stop()
         
         assert lethe.is_running is False
     
     def test_get_status(self, lethe):
-        """Test getting system status."""
+        """Test getting system status.
+
+        Args:
+            lethe: The Lethe fixture instance.
+
+        Verifies that get_status() returns a dictionary containing
+        all expected keys: state, iteration, introspection, decay,
+        safety, and narrative.
+        """
         @lethe.register(name="status_test", importance=Importance.ESSENTIAL)
         def status_test():
             pass
@@ -156,7 +239,14 @@ class TestLethe:
         assert "narrative" in status
     
     def test_force_decay(self, lethe):
-        """Test forcing a decay."""
+        """Test forcing a decay.
+
+        Args:
+            lethe: The Lethe fixture instance.
+
+        Verifies that force_decay() successfully decays a non-essential
+        capability and returns a DecayEvent with the correct capability name.
+        """
         @lethe.register(name="essential", importance=Importance.ESSENTIAL)
         def essential():
             pass
@@ -172,7 +262,14 @@ class TestLethe:
         assert event.capability_name == "decayable"
     
     def test_force_decay_blocked_for_essential(self, lethe):
-        """Test that essential capabilities cannot be force decayed."""
+        """Test that essential capabilities cannot be force decayed.
+
+        Args:
+            lethe: The Lethe fixture instance.
+
+        Verifies that force_decay() returns None when attempting to
+        decay an ESSENTIAL capability, protecting critical functionality.
+        """
         @lethe.register(name="essential", importance=Importance.ESSENTIAL)
         def essential():
             pass
@@ -183,7 +280,14 @@ class TestLethe:
         assert event is None
     
     def test_run_with_max_iterations(self, lethe):
-        """Test running with a maximum iteration count."""
+        """Test running with a maximum iteration count.
+
+        Args:
+            lethe: The Lethe fixture instance.
+
+        Verifies that run() stops after the specified number of
+        iterations and transitions to STOPPED state.
+        """
         @lethe.register(name="run_test", importance=Importance.ESSENTIAL)
         def run_test():
             pass
@@ -196,7 +300,11 @@ class TestLethe:
         assert status["iteration"] == 3
     
     def test_decay_during_run(self):
-        """Test that decay occurs during run."""
+        """Test that decay occurs during run.
+
+        Creates a Lethe instance with 100% decay probability and
+        verifies that the decay engine triggers during the run loop.
+        """
         lethe = Lethe(
             decay_interval=0.01,
             decay_probability=1.0,  # Always decay
@@ -225,7 +333,11 @@ class TestLethe:
         assert status["decay"]["total_decays"] >= 0
     
     def test_safety_protection_during_run(self):
-        """Test that safety layer protects essential capabilities."""
+        """Test that safety layer protects essential capabilities.
+
+        Creates a Lethe instance with aggressive decay settings and
+        verifies that ESSENTIAL capabilities are never removed.
+        """
         lethe = Lethe(
             decay_interval=0.01,
             decay_probability=1.0,
@@ -253,7 +365,12 @@ class TestLetheIntegration:
     """Integration tests for the complete Lethe system."""
     
     def test_full_lifecycle(self):
-        """Test a complete system lifecycle."""
+        """Test a complete system lifecycle.
+
+        Exercises the full Lethe lifecycle: registering capabilities
+        of various importance levels, initializing, running, and
+        verifying that at least one capability remains after decay.
+        """
         lethe = Lethe(
             decay_interval=0.1,
             decay_probability=0.8,
@@ -294,8 +411,20 @@ class TestLetheIntegration:
         assert status["introspection"]["active_capabilities"] >= 1
     
     def test_reproducible_behavior(self):
-        """Test that same seed produces same behavior."""
+        """Test that same seed produces same behavior.
+
+        Verifies that running Lethe with the same seed produces
+        deterministic behavior with identical decay counts.
+        """
         def run_with_seed(seed):
+            """Run a Lethe instance with the given seed.
+
+            Args:
+                seed: The random seed for deterministic behavior.
+
+            Returns:
+                dict: The status dictionary after running 10 iterations.
+            """
             lethe = Lethe(
                 decay_interval=0.05,
                 decay_probability=0.9,

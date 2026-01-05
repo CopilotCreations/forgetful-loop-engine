@@ -280,15 +280,30 @@ class NarrativeLogger:
         return entry
     
     def get_entries(self) -> List[NarrativeEntry]:
-        """Get all narrative entries."""
+        """Get all narrative entries.
+
+        Returns:
+            A copy of all narrative entries generated so far.
+        """
         return self._entries.copy()
     
     def get_recent_entries(self, count: int = 10) -> List[NarrativeEntry]:
-        """Get the most recent narrative entries."""
+        """Get the most recent narrative entries.
+
+        Args:
+            count: Maximum number of entries to return. Defaults to 10.
+
+        Returns:
+            The most recent narrative entries, up to the specified count.
+        """
         return self._entries[-count:]
     
     def get_current_mental_state(self) -> MentalState:
-        """Get the current mental state."""
+        """Get the current mental state.
+
+        Returns:
+            The current mental state based on system health percentage.
+        """
         state = self._introspector.get_current_state()
         return self._get_mental_state(state.health_percentage)
     
